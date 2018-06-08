@@ -45,7 +45,8 @@ export default class ConfirmationCodeInput extends Component {
 
     this.state = {
       codeArr: this.props.defaultValues ? this.props.defaultValues : new Array(this.props.codeLength).fill(''),
-      currentIndex: 0
+      currentIndex: 0,
+      inactiveColor: this.props.inactiveColor
     };
     this.codeInputRefs = [];
   }
@@ -77,7 +78,8 @@ export default class ConfirmationCodeInput extends Component {
     if (_.difference(nextProps.defaultValues, this.props.defaultValues).length > 0) {
       this.state = {
         codeArr: nextProps.defaultValues ? nextProps.defaultValues : new Array(nextProps.codeLength).fill(''),
-        currentIndex: 0
+        currentIndex: 0,
+        inactiveColor: nextProps.inactiveColor
       };
       if (this.state.codeArr && this.state.codeArr.length === nextProps.codeLength) {
         for (let i = 0; i < nextProps.codeLength; i++) {
@@ -89,6 +91,10 @@ export default class ConfirmationCodeInput extends Component {
       if (!shouldNotCallApi) {
         nextProps.onFulfill(this.state.codeArr)
       }
+    }
+
+    if(nextProps.inactiveColor !== this.props.inactiveColor) {
+      this.setState({inactiveColor : nextProps.inactiveColor})
     }
   }
 
@@ -109,11 +115,13 @@ export default class ConfirmationCodeInput extends Component {
   }
 
   _onFocus(index) {
+    console.warn('Called')
     let newCodeArr = _.clone(this.state.codeArr);
     const currentEmptyIndex = _.findIndex(newCodeArr, c => !c);
-    if (currentEmptyIndex !== -1 && currentEmptyIndex < index) {
-      return this._setFocus(currentEmptyIndex);
-    }
+    // console.warn(currentEmptyIndex)
+    // if (currentEmptyIndex !== -1 && currentEmptyIndex < index) {
+    //   return this._setFocus(currentEmptyIndex);
+    // }
     for (const i in newCodeArr) {
       if (i >= index) {
         // newCodeArr[i] = '';
@@ -228,7 +236,9 @@ export default class ConfirmationCodeInput extends Component {
     if (e.nativeEvent.key === 'Backspace') {
       const { currentIndex } = this.state;
       const nextIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-      this._setFocus(nextIndex);
+      if(this.state.codeArr[currentIndex] === ''){
+        this._setFocus(nextIndex);
+      }
     }
   }
 
@@ -296,7 +306,7 @@ export default class ConfirmationCodeInput extends Component {
           style={[
             styles.codeInput,
             initialCodeInputStyle,
-            this._getClassStyle(className, this.state.currentIndex == id),
+            this._getClassStyle(className, true && this.state.inactiveColor !== '#FE5858'),
             codeInputStyle
           ]}
           underlineColorAndroid="transparent"
@@ -306,7 +316,7 @@ export default class ConfirmationCodeInput extends Component {
           {...this.props}
           autoFocus={autoFocus && id == 0}
           onFocus={() => this._onFocus(id)}
-          value={this.state.codeArr[id] ? this.state.codeArr[id].toString() : ''}
+          value={this.state.codeArr[id] || this.state.codeArr[id].toString() === '0' ? this.state.codeArr[id].toString() : ''}
           onChangeText={text => this._onInputCode(text, id)}
           onKeyPress={(e) => this._onKeyPress(e)}
           maxLength={1}
